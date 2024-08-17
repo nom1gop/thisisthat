@@ -4,9 +4,7 @@ import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisConnectionException;
 import org.redisson.config.Config;
-
 import java.util.Date;
-
 import static java.lang.System.out;
 
     public class RedisStorage {
@@ -21,17 +19,10 @@ import static java.lang.System.out;
         private RScoredSortedSet<String> onlineUsers;
 
         private final static String KEY = "ONLINE_USERS";
+        private final int USERSCOUNT = 20;
 
         private double getTs() {
             return new Date().getTime() / 1000;
-        }
-
-        // Пример вывода всех ключей
-        public void listKeys() {
-            Iterable<String> keys = rKeys.getKeys();
-            for(String key: keys) {
-                out.println("KEY: " + key + ", type:" + rKeys.getType(key));
-            }
         }
 
         void init() {
@@ -52,22 +43,16 @@ import static java.lang.System.out;
             redisson.shutdown();
         }
 
-        // Фиксирует посещение пользователем страницы
-        void logPageVisit(int user_id)
-        {
-            //ZADD ONLINE_USERS
-            onlineUsers.add(getTs(), String.valueOf(user_id));
+        // Регистрация на сайте 20 пользователей
+        void registerUsers() throws InterruptedException {
+            for (int i = 1; i <= USERSCOUNT; i++) {
+                onlineUsers.add(getTs(), "Пользователь " + i);
+                Thread.sleep(500);
+            }
         }
 
-        // Удаляет
-        void deleteOldEntries(int secondsAgo)
-        {
-            //ZREVRANGEBYSCORE ONLINE_USERS 0 <time_5_seconds_ago>
-            onlineUsers.removeRangeByScore(0, true, getTs() - secondsAgo, true);
-        }
-        int calculateUsersNumber()
-        {
-            //ZCOUNT ONLINE_USERS
-            return onlineUsers.count(Double.NEGATIVE_INFINITY, true, Double.POSITIVE_INFINITY, true);
+        // Получаем список пользователей
+        public RScoredSortedSet<String> getOnlineUsers() {
+            return onlineUsers;
         }
     }

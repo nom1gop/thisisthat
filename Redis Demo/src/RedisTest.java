@@ -1,49 +1,47 @@
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static java.lang.System.out;
 
 public class RedisTest {
-
-    // Запуск докер-контейнера:
-    // docker run --rm --name skill-redis -p 127.0.0.1:6379:6379/tcp -d redis
-
-    // Для теста будем считать неактивными пользователей, которые не заходили 2 секунды
-    private static final int DELETE_SECONDS_AGO = 2;
-
-    // Допустим пользователи делают 500 запросов к сайту в секунду
-    private static final int RPS = 500;
-
-    // И всего на сайт заходило 1000 различных пользователей
-    private static final int USERS = 1000;
-
-    // Также мы добавим задержку между посещениями
-    private static final int SLEEP = 1; // 1 миллисекунда
-
-    private static final SimpleDateFormat DF = new SimpleDateFormat("HH:mm:ss");
-
-    private static void log(int UsersOnline) {
-        String log = String.format("[%s] Пользователей онлайн: %d", DF.format(new Date()), UsersOnline);
-        out.println(log);
-    }
-
+    private static final int SLEEP = 1000;
     public static void main(String[] args) throws InterruptedException {
 
-        RedisStorage redis = new RedisStorage();
-        redis.init();
-        // Эмулируем 10 секунд работы сайта
-        for(int seconds=0; seconds <= 10; seconds++) {
-            // Выполним 500 запросов
-            for(int request = 0; request <= RPS; request++) {
-                int user_id = new Random().nextInt(USERS);
-                redis.logPageVisit(user_id);
+            RedisStorage redis = new RedisStorage();
+            redis.init();
+            redis.registerUsers();
+
+            int i = 0;
+            while (true) {
+                if (i == 10) {
+                        String donater = redis.getOnlineUsers().stream().collect(Collectors.toList()).get(new Random().nextInt(20));
+                        out.println("> " + donater + " оплатил услугу");
+                        out.println("- На главной странице показан " + donater);
+                        redis.getOnlineUsers().add(new Date().getTime()/100, donater);
+                        i = 0;
+                        Thread.sleep(SLEEP);
+                        }
+                String user = redis.getOnlineUsers().first();
+                out.println(user);
+                redis.getOnlineUsers().add(new Date().getTime() / 100, user);
                 Thread.sleep(SLEEP);
+                i++;
+//                int i = 1;
+//                for (String user : redis.getOnlineUsers()) {
+//                    out.println("- На главной странице показан " + user);
+//                    redis.getOnlineUsers().add(new Date().getTime() / 1000, user);
+//                    Thread.sleep(SLEEP);
+//                    if (i == 10) {
+//                        String donater = redis.getOnlineUsers().stream().collect(Collectors.toList()).get(new Random().nextInt(20));
+//                        out.println("> " + donater + " оплатил услугу");
+//                        out.println("- На главной странице показан " + donater);
+//                        redis.getOnlineUsers().add(new Date().getTime()/1000, donater);
+//                        i = 0;
+//                        Thread.sleep(SLEEP);
+//                    }
+//                    i++;
             }
-            redis.deleteOldEntries(DELETE_SECONDS_AGO);
-            int usersOnline = redis.calculateUsersNumber();
-            log(usersOnline);
-        }
-        redis.shutdown();
     }
 }
