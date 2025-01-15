@@ -7,30 +7,30 @@ public class KeyboardListener implements KeyListener {
     }
     @Override
     public void keyPressed(KeyEvent e) {
-    }
-    @Override
-    public void keyReleased(KeyEvent e) {
         int key = e.getKeyCode();
-        long start = System.currentTimeMillis();
-
-        if (key == 37 && !Field.getMouse().isBlocked(Direction.LEFT)) {
-            Field.getMouse().setLocation(Field.getMouse().getX() - Config.STEP, Field.getMouse().getY());
-        }
-        if (key == 38 && !Field.getMouse().isBlocked(Direction.UP)) {
-            Field.getMouse().setLocation(Field.getMouse().getX(), Field.getMouse().getY() - Config.STEP);
-        }
-        if (key == 39 && !Field.getMouse().isBlocked(Direction.RIGHT)) {
-            Field.getMouse().setLocation(Field.getMouse().getX() + Config.STEP, Field.getMouse().getY());
-        }
-        if (key == 40 && !Field.getMouse().isBlocked(Direction.DOWN)) {
-            Field.getMouse().setLocation(Field.getMouse().getX(), Field.getMouse().getY() + Config.STEP);
-        }
-        if (key == 27) {
-            System.exit(0);
+        switch (key) {
+            case 37:
+                Field.getMouse().moveLeft();
+                break;
+            case 38:
+                Field.getMouse().moveUp();
+                break;
+            case 39:
+                Field.getMouse().moveRight();
+                break;
+            case 40:
+                Field.getMouse().moveDown();
+                break;
+            case 27:
+                System.exit(0);
+                break;
         }
 
         Field.getMouse().collectCheese();
+        Field.getMouse().exitLevel();
 
-        System.out.println("x = " + Field.getMouse().getX() + ", y = " + Field.getMouse().getY() + ", время хода: " + (System.currentTimeMillis() - start));
+    }
+    @Override
+    public void keyReleased(KeyEvent e) {
     }
 }
